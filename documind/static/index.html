@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocuMind | Autonomous Research Intelligence & Hybrid RAG</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>DocuMind <span class="badge-tag">HYBRID RAG</span></h1>
+          <p class="tagline">Autonomous Research Intelligence for Academic Literature</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="status-pill" id="healthPill">
+        <span class="status-dot online"></span>
+        <span id="healthText">ChromaDB + BM25 Ready</span>
+      </div>
+      <div class="stats-pills">
+        <span class="stat-badge"><strong id="statDocCount">0</strong> Papers</span>
+        <span class="stat-badge"><strong id="statChunkCount">0</strong> Chunks</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <a href="https://github.com/beingdeveloper21/DocuMind" target="_blank" rel="noopener noreferrer" class="btn-github">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main 3-Column Interface -->
+  <main class="app-container">
+    <!-- Left Panel: Ingestion & Papers Library -->
+    <aside class="sidebar-panel">
+      <div class="panel-section">
+        <div class="section-title">
+          <h3>Academic Paper Library</h3>
+          <span class="hint-label">PDF Format</span>
+        </div>
+
+        <!-- Drag & Drop Uploader -->
+        <div class="upload-dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".pdf" style="display: none;" multiple>
+          <div class="dropzone-content">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            <p class="dropzone-primary">Click or drop research PDFs</p>
+            <p class="dropzone-secondary">PyMuPDF Layout & Section Extraction</p>
+          </div>
+        </div>
+
+        <!-- Sample Paper Loader -->
+        <div class="sample-loader">
+          <button class="btn-sample" id="btnLoadSample">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6"/>
+            </svg>
+            Index Sample Academic Paper
+          </button>
+        </div>
+      </div>
+
+      <!-- Indexed Papers List -->
+      <div class="panel-section flex-grow">
+        <div class="section-title">
+          <h4>Indexed Documents (<span id="docCountBadge">0</span>)</h4>
+        </div>
+        <div class="documents-list" id="documentsList">
+          <div class="empty-state">No papers indexed yet. Upload a PDF or click sample to begin.</div>
+        </div>
+      </div>
+
+      <!-- Retrieval Controls -->
+      <div class="panel-section config-section">
+        <div class="section-title">
+          <h4>Hybrid Retrieval Parameters</h4>
+        </div>
+        <div class="control-row">
+          <label for="alphaSlider">
+            Dense Weight (<span id="alphaVal">0.50</span>)
+            <span class="sub-hint">BM25: <span id="bm25Val">0.50</span></span>
+          </label>
+          <input type="range" id="alphaSlider" min="0" max="1" step="0.05" value="0.5">
+        </div>
+        <div class="control-row">
+          <label for="lambdaSlider">
+            MMR Diversity &lambda; (<span id="lambdaVal">0.70</span>)
+            <span class="sub-hint">Eliminates Duplicate Context</span>
+          </label>
+          <input type="range" id="lambdaSlider" min="0.1" max="1" step="0.05" value="0.7">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Panel: Conversational Workspace -->
+    <section class="workspace-panel">
+      <!-- Mode Switcher -->
+      <div class="workspace-header">
+        <div class="mode-tabs">
+          <button class="tab-btn active" id="tabQA" data-mode="qa">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Contextual QA & Streaming
+          </button>
+          <button class="tab-btn" id="tabResearch" data-mode="research">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            Autonomous Deep Research
+          </button>
+        </div>
+
+        <div class="workspace-actions">
+          <button class="btn-action" id="btnClearChat" title="Clear Chat History">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="messages-container" id="messagesContainer">
+        <!-- Welcome Card -->
+        <div class="message system-message">
+          <div class="system-welcome">
+            <h3>DocuMind Research Intelligence Engine</h3>
+            <p>Ready to analyze complex scientific papers with verified attribution.</p>
+            <div class="feature-tags">
+              <span class="tag">ChromaDB Dense Vectors</span>
+              <span class="tag">BM25 Keyword Scoring</span>
+              <span class="tag">MMR Context De-duplication</span>
+              <span class="tag">Source-Page Citation Anchors</span>
+              <span class="tag">Asynchronous SSE Streaming</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Groundedness Audit Bar -->
+      <div class="grounding-bar" id="groundingBar" style="display: none;">
+        <div class="grounding-info">
+          <span class="grounding-title">Groundedness Score:</span>
+          <span class="grounding-score" id="groundingScore">100%</span>
+          <span class="grounding-detail" id="groundingDetail">All statements verified against source pages.</span>
+        </div>
+        <div class="grounding-progress">
+          <div class="grounding-fill" id="groundingFill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Prompt Input Bar -->
+      <div class="input-panel">
+        <form class="input-form" id="queryForm">
+          <textarea
+            id="queryInput"
+            rows="2"
+            placeholder="Ask a technical or comparative question across indexed research papers..."
+          ></textarea>
+          <button type="submit" class="btn-send" id="btnSend">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </form>
+        <div class="input-footer">
+          <span>Press <strong>Enter</strong> to submit &bull; <strong>Shift + Enter</strong> for multi-line</span>
+          <span id="streamingIndicator" class="streaming-pill" style="display: none;">
+            <span class="pulse-dot"></span> Streaming Verified Tokens...
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Hybrid Retrieval & MMR Inspector -->
+    <aside class="inspector-panel">
+      <div class="panel-section">
+        <div class="section-title">
+          <h3>Hybrid Search Inspector</h3>
+          <span class="hint-label">Real-Time Rank Mechanics</span>
+        </div>
+        <p class="inspector-desc">
+          Live inspection of dense ChromaDB cosine similarity, sparse BM25 scores, and MMR duplicate penalty re-ranking.
+        </p>
+      </div>
+
+      <div class="panel-section flex-grow">
+        <div class="section-title">
+          <h4>Retrieved Candidates & Score Breakdown</h4>
+        </div>
+        <div class="candidates-container" id="candidatesContainer">
+          <div class="empty-state">Execute a query to inspect dense vs BM25 weights and MMR diversity adjustments.</div>
+        </div>
+      </div>
+
+      <!-- Autonomous Research Matrix (Visible in Research Mode) -->
+      <div class="panel-section research-matrix-panel" id="researchMatrixPanel" style="display: none;">
+        <div class="section-title">
+          <h4>Decomposed Sub-Queries & Synthesis</h4>
+        </div>
+        <div class="subqueries-list" id="subqueriesList"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Citation Evidence Modal Popover -->
+  <div class="modal-backdrop" id="citationModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4 id="modalDocTitle">Source Page Evidence</h4>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="provenance-tags">
+          <span class="modal-tag" id="modalPageTag">Page 1</span>
+          <span class="modal-tag" id="modalSectionTag">Methodology</span>
+          <span class="modal-tag verified" id="modalStatusTag">Verified Grounding</span>
+        </div>
+        <blockquote class="modal-excerpt" id="modalExcerpt">Excerpt text goes here...</blockquote>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
