@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Autonomous Research Intelligence & Hybrid RAG System for Academic PDFs"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
     { name = "Prem Chandra Jha", email = "jhaprem4220@gmail.com" }
 ]
@@ -40,6 +40,9 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["documind*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
