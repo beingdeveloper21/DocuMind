@@ -388,17 +388,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Format Answer Text with Clickable Citation Badges
+  // Format Answer Text with Markdown Rendering and Clickable Citation Badges
   function formatAnswerWithCitations(text) {
-    // Replace [Doc: name, Page: X, Section: Y] with clickable badge
-    const citationRegex = /\[(?:Doc:\s*)?([^,\]]+?),\s*(?:Page|p\.?):\s*(\d+)(?:,\s*(?:Section|Sec\.?):\s*([^\]]+))?\]/gi;
+    if (!text) return "";
 
-    return escapeHtml(text).replace(citationRegex, (match, doc, page, sec) => {
-      const key = `${doc}_p${page}`;
-      return `<button class="citation-badge" onclick="window.showCitationModal('${escapeAttr(doc)}', ${page}, '${escapeAttr(sec || "General")}')">
-        <span>&para; Page ${page}</span>
-      </button>`;
+    // 1. Temporarily extract citation tags
+    const citationRegex = /\[(?:Doc:\s*)?([^,\]]+?),\s*(?:Page|p\.?):\s*(\d+)(?:,\s*(?:Section|Sec\.?):\s*([^\]]+))?\]/gi;
+    let formatted = text.replace(citationRegex, (match, doc, page, sec) => {
+      return `___CITATION_${escapeAttr(doc)}___${page}___${escapeAttr(sec || "General")}___`;
     });
+
+    // 2. Escape HTML for safety
+    formatted = escapeHtml(formatted);
+
+    // 3. Re-inject interactive citation badges
+    formatted = formatted.replace(/___CITATION_([^_]+)___(\d+)___([^_]+)___/g, (m, doc, page, sec) => {
+      return `<button class="citation-badge" onclick="window.showCitationModal('${doc}', ${page}, '${sec}')"><span>&para; Page ${page}</span></button>`;
+    });
+
+    // 4. Render Markdown Headings: ### Title -> <h4>Title</h4>
+    formatted = formatted.replace(/^### (.*$)/gim, '<h4 style="color: var(--accent-cyan); margin: 10px 0 6px 0; font-weight: 600;">$1</h4>');
+    formatted = formatted.replace(/^## (.*$)/gim, '<h3 style="color: var(--accent-cyan); margin: 12px 0 8px 0; font-weight: 700;">$1</h3>');
+
+    // 5. Render Bold: **bold**
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff;">$1</strong>');
+
+    // 6. Render Italic: *italic*
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em style="color: var(--text-dim);">$1</em>');
+
+    // 7. Render Bullet Points: - text
+    formatted = formatted.replace(/^\s*-\s+(.*$)/gim, '<div style="margin-left: 12px; margin-bottom: 6px; display: flex; gap: 8px;"><span style="color: var(--accent-cyan);">&bull;</span><div>$1</div></div>');
+
+    // 8. Render Paragraphs & Line Breaks
+    formatted = formatted.replace(/\n\n+/g, '<div style="height: 10px;"></div>');
+    formatted = formatted.replace(/\n/g, '<br>');
+
+    return formatted;
   }
 
   // Render Inspector Candidates
